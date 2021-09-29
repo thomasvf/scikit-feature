@@ -1,5 +1,7 @@
 import numpy as np
 from skfeature.utility.mutual_information import su_calculation
+from sklearn.base import BaseEstimator, MetaEstimatorMixin
+from sklearn.feature_selection import SelectorMixin
 
 
 def merit_calculation(X, y):
@@ -63,6 +65,7 @@ def cfs(X, y):
     # M stores the merit values
     M = []
     while True:
+        print("Iterate...")
         merit = -100000000000
         idx = -1
         for i in range(n_features):
@@ -82,5 +85,37 @@ def cfs(X, y):
                     if M[len(M)-3] <= M[len(M)-4]:
                         if M[len(M)-4] <= M[len(M)-5]:
                             break
-    return np.array(F)
 
+    return np.array(F, dtype=int)
+
+
+class CFS(SelectorMixin, MetaEstimatorMixin, BaseEstimator):
+    """Correlation based heuristic to evaluate the worth of features which is called CFS."""
+    def __init__(self):
+        pass
+
+    def fit(self, X, y):
+        """
+        Fit the CFS.
+
+        Parameters
+        ----------
+        X : {np.ndarray} of shape (n_samples, n_features)
+            The training samples.
+        y : {numpy array} of shape (n_samples,)
+            The training labels
+
+        Returns
+        -------
+        self : object
+            Fitted estimator.
+        """
+        n_features = X.shape[1]
+        indices = cfs(X, y)
+        self._support = np.zeros(n_features, dtype=bool)
+        self._support[indices] = True
+
+        return self
+
+    def _get_support_mask(self):
+        return self._support
