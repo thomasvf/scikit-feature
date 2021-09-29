@@ -1,5 +1,7 @@
 import numpy as np
 from skfeature.utility.mutual_information import su_calculation
+from sklearn.base import BaseEstimator, MetaEstimatorMixin
+from sklearn.feature_selection import SelectorMixin
 
 
 def fcbf(X, y, **kwargs):
@@ -36,12 +38,12 @@ def fcbf(X, y, **kwargs):
         delta = 0
 
     # t1[:,0] stores index of features, t1[:,1] stores symmetrical uncertainty of features
-    t1 = np.zeros((n_features, 2), dtypes='object')
+    t1 = np.zeros((n_features, 2))
     for i in range(n_features):
         f = X[:, i]
         t1[i, 0] = i
         t1[i, 1] = su_calculation(f, y)
-    s_list = t1[t1[:, 1] > delta, :]
+    s_list = (t1[t1[:, 1] > delta, :]).astype(np.int)
     # index of selected features, initialized to be empty
     F = []
     # Symmetrical uncertainty of selected features
@@ -66,3 +68,42 @@ def fcbf(X, y, **kwargs):
                 length = len(s_list)//2
                 s_list = s_list.reshape((length, 2))
     return np.array(F, dtype=int), np.array(SU)
+
+
+class FastCorrelationBasedFilter(SelectorMixin, MetaEstimatorMixin, BaseEstimator):
+    """Fast Correlation Based Filter algorithm."""
+    def __init__(self, delta=0):
+        """Initialize Fast Correlation based Filter.
+
+        Parameters
+        ----------
+        delta : float
+            Threshold parameter. #todo threshold for what?
+        """
+        self.delta = delta
+
+    def fit(self, X, y):
+        """
+        Fit the FCBF.
+
+        Parameters
+        ----------
+        X : {np.ndarray} of shape (n_samples, n_features)
+            The training samples.
+        y : {numpy array} of shape (n_samples,)
+            The training labels
+
+        Returns
+        -------
+        self : object
+            Fitted estimator.
+        """
+        n_features = X.shape[1]
+        indices, su = fcbf(X, y)
+        self._support = np.zeros(n_features, dtype=bool)
+        self._support[indices] = True
+
+        return self
+
+    def _get_support_mask(self):
+        return self._support
