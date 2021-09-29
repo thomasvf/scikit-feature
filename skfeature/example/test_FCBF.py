@@ -1,11 +1,9 @@
-import matplotlib.pyplot as plt
 import scipy.io
 import pandas as pd
-import matplotlib.pyplot as pl
-from sklearn.metrics import accuracy_score
-from sklearn.model_selection import StratifiedKFold, RepeatedStratifiedKFold
+import matplotlib.pyplot as plt
 from sklearn import svm
 from sklearn.pipeline import Pipeline
+from sklearn.model_selection import RepeatedStratifiedKFold
 from sklearn.metrics import f1_score, accuracy_score, recall_score, precision_score
 
 from skfeature.function.information_theoretical_based import FCBF
