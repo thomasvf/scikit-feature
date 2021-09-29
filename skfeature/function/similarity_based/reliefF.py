@@ -1,5 +1,7 @@
-import numpy as np
+from sklearn.base import BaseEstimator, MetaEstimatorMixin
+from sklearn.feature_selection import SelectorMixin
 from sklearn.metrics.pairwise import pairwise_distances
+import numpy as np
 
 
 def reliefF(X, y, **kwargs):
@@ -112,7 +114,49 @@ def feature_ranking(score):
     return idx[::-1]
 
 
+class ReliefF(SelectorMixin, MetaEstimatorMixin, BaseEstimator):
+    """ReliefF feature selection algorithm."""
+    def __init__(self, n_features_to_select=0.05, n_neighbors=5):
+        """Initialize mRMR.
 
+        Parameters
+        ----------
+        n_features_to_select : int or float
+            Number of features to select.
+        n_neighbors : int
+            Number of neighbors in the ReliefF.
+        """
+        self.n_features_to_select = n_features_to_select
+        self.n_neighbors = n_neighbors
 
+    def fit(self, X, y):
+        """
+        Fit the mRMR.
 
+        Parameters
+        ----------
+        X : {np.ndarray} of shape (n_samples, n_features)
+            The training samples.
+        y : {numpy array} of shape (n_samples,)
+            The training labels
 
+        Returns
+        -------
+        self : object
+            Fitted estimator.
+        """
+        n_features = X.shape[1]
+        if isinstance(self.n_features_to_select, float):
+            n_features_to_select = round(self.n_features_to_select * n_features)
+        else:
+            n_features_to_select = self.n_features_to_select
+
+        self.scores_ = reliefF(X, y, k=self.n_neighbors)
+        indices = feature_ranking(self.scores_)[:n_features_to_select]
+
+        self.support_ = np.zeros(n_features, dtype=bool)
+        self.support_[indices] = True
+        return self
+
+    def _get_support_mask(self):
+        return self.support_
