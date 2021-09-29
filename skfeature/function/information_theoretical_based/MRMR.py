@@ -1,7 +1,8 @@
-from skfeature.function.information_theoretical_based import LCSI
 from sklearn.base import BaseEstimator, MetaEstimatorMixin
 from sklearn.feature_selection import SelectorMixin
 import numpy as np
+
+from skfeature.function.information_theoretical_based import LCSI
 
 
 def mrmr(X, y, **kwargs):
