@@ -4,7 +4,7 @@ import pandas as pd
 import matplotlib.pyplot as plt
 from sklearn import svm
 from sklearn.pipeline import Pipeline
-from sklearn.model_selection import RepeatedStratifiedKFold
+from sklearn.model_selection import RepeatedStratifiedKFold, GridSearchCV
 from sklearn.metrics import f1_score, accuracy_score, recall_score, precision_score
 from joblib import Memory
 
@@ -27,25 +27,44 @@ def main():
 
     # perform evaluation on classification task
     num_fea = 20  # number of selected features
-    clf = svm.LinearSVC()  # linear SVM
+    clf = svm.SVC(verbose=10)  # linear SVM
     memory = Memory('./cachedir', verbose=1)
-    fs = mutual_info.MutualInformation(n_features_to_select=0.1, random_state=0, memory=None)
+    fs = mutual_info.MutualInformation(n_features_to_select=0.1, random_state=0, memory=memory)
+
     pipe = Pipeline([
         ('fs', fs),
         ('clf', clf)
     ])
+    params = [
+        {'fs__n_features_to_select': [1, 2, 3, 4, 5, 10, 50, 100, 500], 'clf__kernel': ['linear'],
+         'clf__C': [0.3, 3, 30, 300]},
+        {'fs__n_features_to_select': [1, 2, 3, 4, 5, 10, 50, 100, 500], 'clf__kernel': ['rbf'],
+         'clf__C': [0.3, 3, 30, 300], 'clf__gamma': [0.0003, 0.003, 0.03, 0.3]},
+    ]
+    params_simplified = [
+        {'fs__n_features_to_select': [1, 500], 'clf__kernel': ['linear'],
+         'clf__C': [3, 300]},
+        {'fs__n_features_to_select': [1, 500], 'clf__kernel': ['rbf'],
+         'clf__C': [3, 300], 'clf__gamma': [0.0003, 0.03]}
+    ]
 
-    reports = {'f1_scores': [], 'accuracy_scores': [], 'precision_scores': [], 'recall_scores': [], 'support_indices': []}
+    reports = {'f1_scores': [], 'accuracy_scores': [], 'precision_scores': [], 'recall_scores': [],
+               'support_indices': [], 'best_params': []}
     for r, (train, test) in enumerate(ss.split(X, y)):
         print("Run [%d/%d]" % (r + 1, n_splits*n_repeats))
-        pipe = pipe.fit(X[train], y[train])
-        y_pred = pipe.predict(X[test])
+
+        # this will grid search for the best parameters and retrain the model using the best parameters on the whole set
+        grid_search = GridSearchCV(pipe, param_grid=params, scoring='f1', refit=True, verbose=10)
+        grid_search.fit(X[train], y[train])
+
+        y_pred = grid_search.predict(X[test])
 
         reports['f1_scores'].append(f1_score(y[test], y_pred))
         reports['accuracy_scores'].append(accuracy_score(y[test], y_pred))
         reports['recall_scores'].append(recall_score(y[test], y_pred))
         reports['precision_scores'].append(precision_score(y[test], y_pred))
-        reports['support_indices'].append(pipe.named_steps['fs'].get_support(indices=True))
+        reports['support_indices'].append(grid_search.best_estimator_.named_steps['fs'].get_support(indices=True))
+        reports['best_params'].append(grid_search.best_params_)
     memory.clear()
 
     f1_scores = pd.Series(reports['f1_scores'])
@@ -57,11 +76,23 @@ def main():
         all_selected_features = np.concatenate((all_selected_features, selected_features))
     n_times_selected = pd.Series(np.bincount(all_selected_features) / (n_repeats * n_splits))
     n_times_selected.sort_values(ascending=False, inplace=True)
-
+    print("===========")
+    print("Best params")
+    print(reports['best_params'])
+    print('=========')
+    print("f1-score")
     print(f1_scores.describe())
+    print('=========')
+    print("Accuracy")
     print(accuracy_scores.describe())
+    print('=========')
+    print("Recall")
     print(recall_scores.describe())
+    print('=========')
+    print("Precision")
     print(precision_scores.describe())
+    print('=========')
+    print("Feature selection")
     print(n_times_selected.describe())
 
     fig, ax = plt.subplots(2, 2)
