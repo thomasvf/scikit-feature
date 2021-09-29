@@ -1,4 +1,7 @@
 from skfeature.function.information_theoretical_based import LCSI
+from sklearn.base import BaseEstimator, MetaEstimatorMixin
+from sklearn.feature_selection import SelectorMixin
+import numpy as np
 
 
 def mrmr(X, y, **kwargs):
@@ -34,3 +37,45 @@ def mrmr(X, y, **kwargs):
     else:
         F, J_CMI, MIfy = LCSI.lcsi(X, y, gamma=0, function_name='MRMR')
     return F, J_CMI, MIfy
+
+
+class MinimumRedundancyMaximumRelevance(SelectorMixin, MetaEstimatorMixin, BaseEstimator):
+    """Minimum Redundancy Maximum Relevance feature selection algorithm."""
+    def __init__(self, n_features_to_select=None):
+        """Initialize mRMR.
+
+        Parameters
+        ----------
+        n_features_to_select : int
+            Number of features to select.
+        """
+        self.n_features_to_select = n_features_to_select
+
+    def fit(self, X, y):
+        """
+        Fit the mRMR.
+
+        Parameters
+        ----------
+        X : {np.ndarray} of shape (n_samples, n_features)
+            The training samples.
+        y : {numpy array} of shape (n_samples,)
+            The training labels
+
+        Returns
+        -------
+        self : object
+            Fitted estimator.
+        """
+        n_features = X.shape[1]
+        if self.n_features_to_select:
+            indices, self._j_cmi, self._mi_fy = mrmr(X, y, n_selected_features=self.n_features_to_select)
+        else:
+            indices, self._j_cmi, self._mi_fy = mrmr(X, y, n_selected_features=self.n_features_to_select)
+
+        self._support = np.zeros(n_features, dtype=bool)
+        self._support[indices] = True
+        return self
+
+    def _get_support_mask(self):
+        return self._support
