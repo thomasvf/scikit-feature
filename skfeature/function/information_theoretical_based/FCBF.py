@@ -73,7 +73,7 @@ def fcbf(X, y, **kwargs):
 class FastCorrelationBasedFilter(SelectorMixin, MetaEstimatorMixin, BaseEstimator):
     # todo cache function and check for valid n_features_to_select. Return bad result if invalid.
     """Fast Correlation Based Filter algorithm."""
-    def __init__(self, delta=0, n_features_to_select=None):
+    def __init__(self, delta=0, n_features_to_select=None, memory=None):
         """Initialize Fast Correlation based Filter.
 
         Parameters
@@ -82,9 +82,12 @@ class FastCorrelationBasedFilter(SelectorMixin, MetaEstimatorMixin, BaseEstimato
             Threshold parameter. #todo threshold for what?
         n_features_to_select : int
             Number of features to use.
+        memory : Memory
+            Memory for caching the results of the FCBF.
         """
         self.delta = delta
         self.n_features_to_select = n_features_to_select
+        self.memory = memory
 
     def fit(self, X, y):
         """
@@ -103,8 +106,17 @@ class FastCorrelationBasedFilter(SelectorMixin, MetaEstimatorMixin, BaseEstimato
             Fitted estimator.
         """
         n_features = X.shape[1]
-        indices, su = fcbf(X, y)
+        if self.memory is not None:
+            fcbf_ = self.memory.cache(fcbf)
+            indices, su = fcbf_(X, y)
+        else:
+            indices, su = fcbf(X, y)
+
         if self.n_features_to_select is not None:
+            if self.n_features_to_select > len(indices):
+                raise ValueError("Number of features to select ({} features) in FCBF is greater than the number of features "
+                      "returned by the algorithm ({} features).".format(self.n_features_to_select, len(indices)))
+
             indices = indices[:self.n_features_to_select]
 
         self.support_ = np.zeros(n_features, dtype=bool)
