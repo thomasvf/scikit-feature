@@ -3,6 +3,7 @@ from sklearn.feature_selection import SelectorMixin
 import numpy as np
 
 from skfeature.function.information_theoretical_based import LCSI
+from joblib.memory import Memory
 
 
 def mrmr(X, y, **kwargs):
@@ -42,15 +43,18 @@ def mrmr(X, y, **kwargs):
 
 class MinimumRedundancyMaximumRelevance(SelectorMixin, MetaEstimatorMixin, BaseEstimator):
     """Minimum Redundancy Maximum Relevance feature selection algorithm."""
-    def __init__(self, n_features_to_select=None):
+    def __init__(self, n_features_to_select=None, memory=None):
         """Initialize mRMR.
 
         Parameters
         ----------
         n_features_to_select : int
             Number of features to select.
+        memory : Memory
+            Memory to cache mrmr execution.
         """
         self.n_features_to_select = n_features_to_select
+        self.memory = memory
 
     def fit(self, X, y):
         """
@@ -69,10 +73,18 @@ class MinimumRedundancyMaximumRelevance(SelectorMixin, MetaEstimatorMixin, BaseE
             Fitted estimator.
         """
         n_features = X.shape[1]
-        if self.n_features_to_select:
-            indices, self.j_cmi_, self.mi_fy_ = mrmr(X, y, n_selected_features=self.n_features_to_select)
+        if self.memory is not None:
+            mrmr_ = self.memory.cache(mrmr)
+            indices, _, _ = mrmr_(X, y)
         else:
-            indices, self.j_cmi_, self.mi_fy_ = mrmr(X, y, n_selected_features=self.n_features_to_select)
+            indices, _, _ = mrmr(X, y)
+
+        if self.n_features_to_select:
+            if self.n_features_to_select > len(indices):
+                raise ValueError("Number of features to select ({} features) in MRMR is greater than the number of features "
+                      "returned by the algorithm ({} features).".format(self.n_features_to_select, len(indices)))
+
+            indices = indices[:self.n_features_to_select]
 
         self.support_ = np.zeros(n_features, dtype=bool)
         self.support_[indices] = True
