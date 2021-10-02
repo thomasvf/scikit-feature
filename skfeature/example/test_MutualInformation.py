@@ -41,12 +41,6 @@ def main():
         {'fs__n_features_to_select': [1, 2, 3, 4, 5, 10, 50, 100, 500], 'clf__kernel': ['rbf'],
          'clf__C': [0.3, 3, 30, 300], 'clf__gamma': [0.0003, 0.003, 0.03, 0.3]},
     ]
-    params_simplified = [
-        {'fs__n_features_to_select': [1, 500], 'clf__kernel': ['linear'],
-         'clf__C': [3, 300]},
-        {'fs__n_features_to_select': [1, 500], 'clf__kernel': ['rbf'],
-         'clf__C': [3, 300], 'clf__gamma': [0.0003, 0.03]}
-    ]
 
     reports = {'f1_scores': [], 'accuracy_scores': [], 'precision_scores': [], 'recall_scores': [],
                'support_indices': [], 'best_params': []}
