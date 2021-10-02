@@ -70,13 +70,13 @@ class MinimumRedundancyMaximumRelevance(SelectorMixin, MetaEstimatorMixin, BaseE
         """
         n_features = X.shape[1]
         if self.n_features_to_select:
-            indices, self._j_cmi, self._mi_fy = mrmr(X, y, n_selected_features=self.n_features_to_select)
+            indices, self.j_cmi_, self.mi_fy_ = mrmr(X, y, n_selected_features=self.n_features_to_select)
         else:
-            indices, self._j_cmi, self._mi_fy = mrmr(X, y, n_selected_features=self.n_features_to_select)
+            indices, self.j_cmi_, self.mi_fy_ = mrmr(X, y, n_selected_features=self.n_features_to_select)
 
-        self._support = np.zeros(n_features, dtype=bool)
-        self._support[indices] = True
+        self.support_ = np.zeros(n_features, dtype=bool)
+        self.support_[indices] = True
         return self
 
     def _get_support_mask(self):
-        return self._support
+        return self.support_

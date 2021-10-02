@@ -71,16 +71,20 @@ def fcbf(X, y, **kwargs):
 
 
 class FastCorrelationBasedFilter(SelectorMixin, MetaEstimatorMixin, BaseEstimator):
+    # todo cache function and check for valid n_features_to_select. Return bad result if invalid.
     """Fast Correlation Based Filter algorithm."""
-    def __init__(self, delta=0):
+    def __init__(self, delta=0, n_features_to_select=None):
         """Initialize Fast Correlation based Filter.
 
         Parameters
         ----------
         delta : float
             Threshold parameter. #todo threshold for what?
+        n_features_to_select : int
+            Number of features to use.
         """
         self.delta = delta
+        self.n_features_to_select = n_features_to_select
 
     def fit(self, X, y):
         """
@@ -100,10 +104,13 @@ class FastCorrelationBasedFilter(SelectorMixin, MetaEstimatorMixin, BaseEstimato
         """
         n_features = X.shape[1]
         indices, su = fcbf(X, y)
-        self._support = np.zeros(n_features, dtype=bool)
-        self._support[indices] = True
+        if self.n_features_to_select is not None:
+            indices = indices[:self.n_features_to_select]
+
+        self.support_ = np.zeros(n_features, dtype=bool)
+        self.support_[indices] = True
 
         return self
 
     def _get_support_mask(self):
-        return self._support
+        return self.support_
