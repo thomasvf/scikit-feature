@@ -6,6 +6,8 @@ from sklearn import svm
 from sklearn.pipeline import Pipeline
 from sklearn.model_selection import RepeatedStratifiedKFold, GridSearchCV
 from sklearn.metrics import f1_score, accuracy_score, recall_score, precision_score
+from sklearn.datasets import make_classification
+from sklearn.preprocessing import KBinsDiscretizer
 
 from skfeature.function.information_theoretical_based import MRMR
 from joblib.memory import Memory
@@ -17,22 +19,44 @@ def test_workings():
     X = X.astype(float)
     y = mat['Y']  # label
     y = y[:, 0]
+    random_state = np.random.RandomState(0)
+    n_features_to_select = 5
+
+    X_2, y_2 = make_classification(n_samples=10000, n_features=20, random_state=random_state, n_informative=5,
+                                   n_repeated=0, n_redundant=0)
+    discretizer = KBinsDiscretizer(n_bins=5, encode='ordinal', strategy='quantile')
+    X_2 = discretizer.fit_transform(X_2, y_2)
+
+    print(X)
+    print(X_2)
+    y_2[y_2 == 0] = -1
+    y_2 = y_2.astype(np.int16)
     n_samples, n_features = X.shape  # number of samples and number of features
+    print(y.shape)
+    print(y_2.shape)
+    print(y[:10])
+    print(y.dtype)
+    print(y_2.dtype)
     print("#Samples: %d #Features: %d" % (n_samples, n_features))
 
     memory = Memory('./cachedir')
-    fs = MRMR.MinimumRedundancyMaximumRelevance(n_features_to_select=100, memory=memory)
-    fs.fit(X, y)
-    print(fs.get_support(indices=True))
+    # fs = MRMR.MinimumRedundancyMaximumRelevance(n_features_to_select=n_features_to_select, memory=memory)
+    # fs.fit(X_2, y_2)
+    # print(fs.get_support(indices=True))
+    indices, _, _ = MRMR.mrmr(X_2, y_2)
+    print(indices)
 
 
 def main():
     # load data
-    mat = scipy.io.loadmat('../data/colon.mat')
-    X = mat['X']    # data
-    X = X.astype(float)
-    y = mat['Y']    # label
-    y = y[:, 0]
+    # mat = scipy.io.loadmat('../data/colon.mat')
+    # X = mat['X']    # data
+    # X = X.astype(float)
+    # y = mat['Y']    # label
+    # y = y[:, 0]
+    random_state = np.random.RandomState(0)
+    X, y = make_classification(n_samples=50, n_features=10, random_state=random_state, n_informative=2)
+
     n_samples, n_features = X.shape    # number of samples and number of features
     print("#Samples: %d #Features: %d" % (n_samples, n_features))
 
@@ -102,4 +126,4 @@ def main():
 
 
 if __name__ == '__main__':
-    main()
+    test_workings()
