@@ -2,6 +2,7 @@ from sklearn.base import BaseEstimator, MetaEstimatorMixin
 from sklearn.feature_selection import SelectorMixin
 from sklearn.metrics.pairwise import pairwise_distances
 import numpy as np
+from joblib import Memory
 
 
 def reliefF(X, y, **kwargs):
@@ -116,7 +117,7 @@ def feature_ranking(score):
 
 class ReliefF(SelectorMixin, MetaEstimatorMixin, BaseEstimator):
     """ReliefF feature selection algorithm."""
-    def __init__(self, n_features_to_select=0.05, n_neighbors=5):
+    def __init__(self, n_features_to_select=0.05, n_neighbors=5, memory=None):
         """Initialize mRMR.
 
         Parameters
@@ -125,9 +126,12 @@ class ReliefF(SelectorMixin, MetaEstimatorMixin, BaseEstimator):
             Number of features to select.
         n_neighbors : int
             Number of neighbors in the ReliefF.
+        memory : Memory
+            Memory for caching the results of reliefF.
         """
         self.n_features_to_select = n_features_to_select
         self.n_neighbors = n_neighbors
+        self.memory = memory
 
     def fit(self, X, y):
         """
@@ -151,8 +155,13 @@ class ReliefF(SelectorMixin, MetaEstimatorMixin, BaseEstimator):
         else:
             n_features_to_select = self.n_features_to_select
 
-        self.scores_ = reliefF(X, y, k=self.n_neighbors)
-        indices = feature_ranking(self.scores_)[:n_features_to_select]
+        if self.memory is not None:
+            reliefF_ = self.memory.cache(reliefF)
+            scores_ = reliefF_(X, y)
+        else:
+            scores_ = reliefF(X, y)
+
+        indices = feature_ranking(scores_)[:n_features_to_select]
 
         self.support_ = np.zeros(n_features, dtype=bool)
         self.support_[indices] = True
