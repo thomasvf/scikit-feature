@@ -2,6 +2,7 @@ import numpy as np
 from skfeature.utility.mutual_information import su_calculation
 from sklearn.base import BaseEstimator, MetaEstimatorMixin
 from sklearn.feature_selection import SelectorMixin
+from skfeature.utility.discretization import discretize
 
 
 def fcbf(X, y, **kwargs):
@@ -71,9 +72,8 @@ def fcbf(X, y, **kwargs):
 
 
 class FastCorrelationBasedFilter(SelectorMixin, MetaEstimatorMixin, BaseEstimator):
-    # todo cache function and check for valid n_features_to_select. Return bad result if invalid.
     """Fast Correlation Based Filter algorithm."""
-    def __init__(self, delta=0, n_features_to_select=None, memory=None):
+    def __init__(self, delta=0, n_features_to_select=None, memory=None, n_bins=None):
         """Initialize Fast Correlation based Filter.
 
         Parameters
@@ -84,10 +84,13 @@ class FastCorrelationBasedFilter(SelectorMixin, MetaEstimatorMixin, BaseEstimato
             Number of features to use.
         memory : Memory
             Memory for caching the results of the FCBF.
+        n_bins : int
+            Number of bins to use in the discretization. If None, then discretization is not applied.
         """
         self.delta = delta
         self.n_features_to_select = n_features_to_select
         self.memory = memory
+        self.n_bins = n_bins
 
     def fit(self, X, y):
         """
@@ -106,6 +109,14 @@ class FastCorrelationBasedFilter(SelectorMixin, MetaEstimatorMixin, BaseEstimato
             Fitted estimator.
         """
         n_features = X.shape[1]
+        if self.n_bins is not None:
+            print('FCBF: Applying discretization with n_bins = %d...' % self.n_bins)
+            if self.memory is not None:
+                discretize_ = self.memory.cache(discretize)
+                X = discretize_(X, y, self.n_bins)
+            else:
+                X = discretize(X, y, self.n_bins)
+
         if self.memory is not None:
             fcbf_ = self.memory.cache(fcbf)
             indices, su = fcbf_(X, y)
