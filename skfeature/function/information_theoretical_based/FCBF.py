@@ -125,9 +125,9 @@ class FastCorrelationBasedFilter(SelectorMixin, MetaEstimatorMixin, BaseEstimato
 
         if self.n_features_to_select is not None:
             if self.n_features_to_select > len(indices):
-                raise ValueError("Number of features to select ({} features) in FCBF is greater than the number of features "
+                print("Number of features to select ({} features) in MRMR is greater than the number of features "
                       "returned by the algorithm ({} features).".format(self.n_features_to_select, len(indices)))
-
+                print("The method will return {} features".format(len(indices)))
             indices = indices[:self.n_features_to_select]
 
         self.support_ = np.zeros(n_features, dtype=bool)
