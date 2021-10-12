@@ -139,7 +139,7 @@ def test_reproducibility():
     n_splits = 2
     n_bins = 3
     memory = Memory('./cache', verbose=10)
-    X, y = make_classification(n_samples=5000, n_features=100, random_state=random_state, n_informative=10)
+    X, y = make_classification(n_samples=1000, n_features=100, random_state=random_state, n_informative=10)
     ss = RepeatedStratifiedKFold(n_repeats=n_repeats, n_splits=n_splits, random_state=0)
 
     reports = [['run', 'features', 'accuracy', 'f1 score']]
