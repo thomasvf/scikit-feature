@@ -53,11 +53,13 @@ class MinimumRedundancyMaximumRelevance(SelectorMixin, MetaEstimatorMixin, BaseE
         Parameters
         ----------
         n_features_to_select : int
-            Number of features to select.
+            Number of features to select from the features returned.
         memory : Memory
             Memory to cache mrmr execution.
         n_bins : int
             Number of bins to use in the discretization. If None, then discretization is not applied.
+        max_features : int
+            If given, forces algorithm to look for max_features.
         """
         self.n_features_to_select = n_features_to_select
         self.memory = memory
