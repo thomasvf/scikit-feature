@@ -47,7 +47,7 @@ def mrmr(X, y, **kwargs):
 
 class MinimumRedundancyMaximumRelevance(SelectorMixin, MetaEstimatorMixin, BaseEstimator):
     """Minimum Redundancy Maximum Relevance feature selection algorithm."""
-    def __init__(self, n_features_to_select=None, memory=None, n_bins=None, max_features=10000):
+    def __init__(self, n_features_to_select=None, memory=None, n_bins=None, max_features=None):
         """Initialize mRMR.
 
         Parameters
@@ -95,16 +95,26 @@ class MinimumRedundancyMaximumRelevance(SelectorMixin, MetaEstimatorMixin, BaseE
         if self.memory is not None:
             print("Using memory with mrmr.")
             mrmr_ = self.memory.cache(mrmr)
-            indices, _, _ = mrmr_(X, y, n_selected_features=self.max_features)
+            if self.max_features:
+                indices, _, _ = mrmr_(X, y, n_selected_features=self.max_features)
+            else:
+                indices, _, _ = mrmr_(X, y)
         else:
-            indices, _, _ = mrmr(X, y, n_selected_features=self.max_features)
+            if self.max_features:
+                indices, _, _ = mrmr(X, y, n_selected_features=self.max_features)
+            else:
+                indices, _, _ = mrmr(X, y)
 
         print("Asked for %d features. The algorithm returned %d" % (self.n_features_to_select, len(indices)))
         print('----------------------------')
         if self.n_features_to_select:
             if self.n_features_to_select > len(indices):
-                raise ValueError("Number of features to select ({} features) in MRMR is greater than the number of features "
+                print("Number of features to select ({} features) in MRMR is greater than the number of features "
                       "returned by the algorithm ({} features).".format(self.n_features_to_select, len(indices)))
+                print("The method will return {} features".format(len(indices)))
+
+                # raise ValueError("Number of features to select ({} features) in MRMR is greater than the number of features "
+                #       "returned by the algorithm ({} features).".format(self.n_features_to_select, len(indices)))
 
             indices = indices[:self.n_features_to_select]
 

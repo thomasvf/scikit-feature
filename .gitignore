@@ -5,6 +5,7 @@ __pycache__/
 **/cachedir/
 # C extensions
 *.so
+example/cache
 
 # Distribution / packaging
 .Python

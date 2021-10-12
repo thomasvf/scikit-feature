@@ -1,3 +1,6 @@
+import json
+import unittest
+
 import scipy.io
 import numpy as np
 import pandas as pd
@@ -11,6 +14,9 @@ from sklearn.preprocessing import KBinsDiscretizer
 
 from skfeature.function.information_theoretical_based import MRMR
 from joblib.memory import Memory
+
+from mlthomas.feature_selection.utils import get_indices_from_pipeline
+import unittest
 
 
 def test_workings():
@@ -125,5 +131,55 @@ def main():
     memory.clear()
 
 
+def test_reproducibility():
+    save_step = False
+    report_file = 'report_mrmr.json'
+    random_state = 0
+    n_repeats = 2
+    n_splits = 2
+    n_bins = 3
+    memory = Memory('./cache', verbose=10)
+    X, y = make_classification(n_samples=5000, n_features=100, random_state=random_state, n_informative=10)
+    ss = RepeatedStratifiedKFold(n_repeats=n_repeats, n_splits=n_splits, random_state=0)
+
+    reports = [['run', 'features', 'accuracy', 'f1 score']]
+    n_features = [1, 2, 3, 4, 5, 10, 20, 50]
+    try:
+        for r, (train, test) in enumerate(ss.split(X, y)):
+            print("===================")
+            print("Run [%d/%d]" % (r+1, n_repeats*n_splits))
+            for n_feat in n_features:
+                clf = svm.SVC(random_state=random_state, kernel='rbf')
+                fs = MRMR.MinimumRedundancyMaximumRelevance(memory=memory, n_bins=n_bins, n_features_to_select=n_feat)
+                pipeline = Pipeline([('fs', fs), ('clf', clf)])
+                search = GridSearchCV(
+                    pipeline, param_grid=[
+                        {'fs__n_bins': [3], 'clf__C': [30], 'clf__gamma': [0.003]}],
+                    refit=True)
+
+                search.fit(X[train], y[train])
+                y_pred = search.predict(X[test])
+
+                acc = accuracy_score(y[test], y_pred)
+                f1 = f1_score(y[test], y_pred)
+
+                rpt_run = [r, get_indices_from_pipeline(search.best_estimator_).tolist(), acc, f1]
+                reports.append(rpt_run)
+                if save_step:
+                    with open(report_file, 'w') as f:
+                        json.dump(reports, f)
+        memory.clear()
+
+        if not save_step:
+            print("Comparing reports with reports")
+            with open(report_file, 'r') as f:
+                reports_true = json.load(f)
+            unittest.TestCase().assertListEqual(reports_true, reports)
+
+    except Exception as e:
+        memory.clear()
+        raise e
+
+
 if __name__ == '__main__':
-    test_workings()
+    test_reproducibility()
