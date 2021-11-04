@@ -78,9 +78,7 @@ def lcsi(X, y, **kwargs):
             MIfy.append(t1[idx])
             f_select = X[:, idx]
 
-        print(len(F))
         if is_n_selected_features_specified:
-            print("is selected")
             if len(F) == n_selected_features or j_cmi < 0:
                 break
         else:
