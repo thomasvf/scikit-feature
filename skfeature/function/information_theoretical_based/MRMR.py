@@ -82,9 +82,7 @@ class MinimumRedundancyMaximumRelevance(SelectorMixin, MetaEstimatorMixin, BaseE
         self : object
             Fitted estimator.
         """
-        print('---------------------------')
         n_features = X.shape[1]
-        print("X has %d features" % n_features)
 
         if self.n_bins is not None:
             print('Applying discretization with n_bins = %d...' % self.n_bins)
@@ -107,16 +105,11 @@ class MinimumRedundancyMaximumRelevance(SelectorMixin, MetaEstimatorMixin, BaseE
             else:
                 indices, _, _ = mrmr(X, y)
 
-        print("Asked for %d features. The algorithm returned %d" % (self.n_features_to_select, len(indices)))
-        print('----------------------------')
         if self.n_features_to_select:
             if self.n_features_to_select > len(indices):
                 print("Number of features to select ({} features) in MRMR is greater than the number of features "
                       "returned by the algorithm ({} features).".format(self.n_features_to_select, len(indices)))
                 print("The method will return {} features".format(len(indices)))
-
-                # raise ValueError("Number of features to select ({} features) in MRMR is greater than the number of features "
-                #       "returned by the algorithm ({} features).".format(self.n_features_to_select, len(indices)))
 
             indices = indices[:self.n_features_to_select]
 
