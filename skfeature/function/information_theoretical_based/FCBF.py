@@ -110,7 +110,6 @@ class FastCorrelationBasedFilter(SelectorMixin, MetaEstimatorMixin, BaseEstimato
         """
         n_features = X.shape[1]
         if self.n_bins is not None:
-            print('FCBF: Applying discretization with n_bins = %d...' % self.n_bins)
             if self.memory is not None:
                 discretize_ = self.memory.cache(discretize)
                 X = discretize_(X, y, self.n_bins)
@@ -124,10 +123,6 @@ class FastCorrelationBasedFilter(SelectorMixin, MetaEstimatorMixin, BaseEstimato
             indices, su = fcbf(X, y)
 
         if self.n_features_to_select is not None:
-            if self.n_features_to_select > len(indices):
-                print("Number of features to select ({} features) in MRMR is greater than the number of features "
-                      "returned by the algorithm ({} features).".format(self.n_features_to_select, len(indices)))
-                print("The method will return {} features".format(len(indices)))
             indices = indices[:self.n_features_to_select]
 
         self.support_ = np.zeros(n_features, dtype=bool)

@@ -40,8 +40,6 @@ def mrmr(X, y, **kwargs):
         F, J_CMI, MIfy = LCSI.lcsi(X, y, gamma=0, function_name='MRMR', n_selected_features=n_selected_features)
     else:
         F, J_CMI, MIfy = LCSI.lcsi(X, y, gamma=0, function_name='MRMR')
-    print('----------------------------------')
-    print("mrmr ran and returning %d features" % len(F))
     return F, J_CMI, MIfy
 
 
@@ -85,7 +83,6 @@ class MinimumRedundancyMaximumRelevance(SelectorMixin, MetaEstimatorMixin, BaseE
         n_features = X.shape[1]
 
         if self.n_bins is not None:
-            print('Applying discretization with n_bins = %d...' % self.n_bins)
             if self.memory is not None:
                 discretize_ = self.memory.cache(discretize)
                 X = discretize_(X, y, self.n_bins)
@@ -93,7 +90,6 @@ class MinimumRedundancyMaximumRelevance(SelectorMixin, MetaEstimatorMixin, BaseE
                 X = discretize(X, y, self.n_bins)
 
         if self.memory is not None:
-            print("Using memory with mrmr.")
             mrmr_ = self.memory.cache(mrmr)
             if self.max_features:
                 indices, _, _ = mrmr_(X, y, n_selected_features=self.max_features)
@@ -106,11 +102,6 @@ class MinimumRedundancyMaximumRelevance(SelectorMixin, MetaEstimatorMixin, BaseE
                 indices, _, _ = mrmr(X, y)
 
         if self.n_features_to_select:
-            if self.n_features_to_select > len(indices):
-                print("Number of features to select ({} features) in MRMR is greater than the number of features "
-                      "returned by the algorithm ({} features).".format(self.n_features_to_select, len(indices)))
-                print("The method will return {} features".format(len(indices)))
-
             indices = indices[:self.n_features_to_select]
 
         self.support_ = np.zeros(n_features, dtype=bool)
