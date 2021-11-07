@@ -92,14 +92,20 @@ class MinimumRedundancyMaximumRelevance(SelectorMixin, MetaEstimatorMixin, BaseE
         if self.memory is not None:
             mrmr_ = self.memory.cache(mrmr)
             if self.max_features:
-                indices, _, _ = mrmr_(X, y, n_selected_features=self.max_features)
+                indices, j_cmi, mi_y = mrmr_(X, y, n_selected_features=self.max_features)
             else:
-                indices, _, _ = mrmr_(X, y)
+                indices, j_cmi, mi_y = mrmr_(X, y)
         else:
             if self.max_features:
-                indices, _, _ = mrmr(X, y, n_selected_features=self.max_features)
+                indices, j_cmi, mi_y = mrmr(X, y, n_selected_features=self.max_features)
             else:
-                indices, _, _ = mrmr(X, y)
+                indices, j_cmi, mi_y = mrmr(X, y)
+
+        self.scores_ = np.zeros(n_features, dtype=float)
+        self.scores_[indices] = j_cmi
+
+        self.mi_y_ = np.zeros(n_features, dtype=float)
+        self.mi_y_[indices] = mi_y
 
         if self.n_features_to_select:
             indices = indices[:self.n_features_to_select]

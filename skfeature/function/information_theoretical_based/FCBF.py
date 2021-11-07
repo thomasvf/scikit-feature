@@ -122,6 +122,9 @@ class FastCorrelationBasedFilter(SelectorMixin, MetaEstimatorMixin, BaseEstimato
         else:
             indices, su = fcbf(X, y)
 
+        self.scores_ = np.zeros(n_features, dtype=float)
+        self.scores_[indices] = su
+
         if self.n_features_to_select is not None:
             indices = indices[:self.n_features_to_select]
 

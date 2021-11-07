@@ -163,6 +163,7 @@ class ReliefF(SelectorMixin, MetaEstimatorMixin, BaseEstimator):
 
         indices = feature_ranking(scores_)[:n_features_to_select]
 
+        self.scores_ = scores_
         self.support_ = np.zeros(n_features, dtype=bool)
         self.support_[indices] = True
         return self
