@@ -1,4 +1,3 @@
-
 from sklearn.preprocessing import PowerTransformer
 from sklearn.base import BaseEstimator, MetaEstimatorMixin
 from sklearn.feature_selection import SelectorMixin, f_classif
@@ -26,7 +25,7 @@ def f_score(X, y):
     pt = PowerTransformer()
     X = pt.fit_transform(X)
     F, pval = f_classif(X, y)
-    return F
+    return pval
 
 
 def feature_ranking(F):
@@ -34,7 +33,7 @@ def feature_ranking(F):
     Rank features in descending order according to t-score, the higher the t-score, the more important the feature is
     """
     idx = np.argsort(F)
-    return idx[::-1]
+    return idx
 
 
 class FTest(SelectorMixin, MetaEstimatorMixin, BaseEstimator):

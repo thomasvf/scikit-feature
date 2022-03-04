@@ -28,6 +28,7 @@ def t_score(X, y):
 
     n_samples, n_features = X.shape
     F = np.zeros(n_features)
+    pvals=np.zeros(n_features)
     c = np.unique(y)
     pt = PowerTransformer()
     X = pt.fit_transform(X)
@@ -38,19 +39,19 @@ def t_score(X, y):
             # class1 contains instances belonging to the second class
             class0 = f[y == c[0]]
             class1 = f[y == c[1]]
-            F[i], pval = stats.ttest_ind(class0, class1, equal_var=False)
+            F[i], pvals[i] = stats.ttest_ind(class0, class1, equal_var=False)
     else:
         print('y should be guaranteed to a binary class vector')
         exit(0)
-    return np.abs(F)
+    return pvals
 
 
-def feature_ranking(F):
+def feature_ranking(pvals):
     """
     Rank features in descending order according to t-score, the higher the t-score, the more important the feature is
     """
-    idx = np.argsort(F)
-    return idx[::-1]
+    idx = np.argsort(pvals)
+    return idx
 
 
 class TTest(SelectorMixin, MetaEstimatorMixin, BaseEstimator):
