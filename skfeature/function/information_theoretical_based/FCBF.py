@@ -30,7 +30,7 @@ def fcbf(X, y, **kwargs):
     ---------
         Yu, Lei and Liu, Huan. "Feature Selection for High-Dimensional Data: A Fast Correlation-Based Filter Solution." ICML 2003.
     """
-
+    print('fcbf')
     n_samples, n_features = X.shape
     if 'delta' in kwargs.keys():
         delta = kwargs['delta']
@@ -44,7 +44,9 @@ def fcbf(X, y, **kwargs):
         f = X[:, i]
         t1[i, 0] = i
         t1[i, 1] = su_calculation(f, y)
-    s_list = (t1[t1[:, 1] > delta, :]).astype(np.int)
+
+    # s_list = (t1[t1[:, 1] > delta, :]).astype(np.int)
+    s_list = (t1[t1[:, 1] > delta, :])
     # index of selected features, initialized to be empty
     F = []
     # Symmetrical uncertainty of selected features
@@ -53,15 +55,17 @@ def fcbf(X, y, **kwargs):
         # select the largest su inside s_list
         idx = np.argmax(s_list[:, 1])
         # record the index of the feature with the largest su
-        fp = X[:, s_list[idx, 0]]
+        fp = X[:, int(s_list[idx, 0])]
         np.delete(s_list, idx, 0)
+
         F.append(s_list[idx, 0])
         SU.append(s_list[idx, 1])
         for i in s_list[:, 0]:
-            fi = X[:, i]
-            if su_calculation(fp, fi) >= t1[i, 1]:
+            i_int = int(i)
+            fi = X[:, i_int]
+            if su_calculation(fp, fi) >= t1[i_int, 1]:
                 # construct the mask for feature whose su is larger than su(fp,y)
-                idx = s_list[:, 0] != i
+                idx = s_list[:, 0] != i_int
                 idx = np.array([idx, idx])
                 idx = np.transpose(idx)
                 # delete the feature by using the mask
@@ -114,6 +118,7 @@ class FastCorrelationBasedFilter(SelectorMixin, MetaEstimatorMixin, BaseEstimato
                 discretize_ = self.memory.cache(discretize)
                 X = discretize_(X, y, self.n_bins)
             else:
+                print("discretize")
                 X = discretize(X, y, self.n_bins)
 
         if self.memory is not None:

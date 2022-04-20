@@ -1,12 +1,16 @@
 import scipy.io
 import pandas as pd
 import matplotlib.pyplot as plt
+from skfeature.function.information_theoretical_based.FCBF import FastCorrelationBasedFilter
 from sklearn import svm
 from sklearn.pipeline import Pipeline
 from sklearn.model_selection import RepeatedStratifiedKFold, GridSearchCV
 from sklearn.metrics import f1_score, accuracy_score, recall_score, precision_score
+import numpy as np
 
 from skfeature.function.information_theoretical_based import FCBF
+from skfeature.function.information_theoretical_based.mutual_info import MutualInformation
+
 import joblib
 
 
@@ -75,5 +79,70 @@ def main():
     memory.clear()
 
 
+from typing import Union, Tuple, Dict
+path_to_csv = "/home/thomas/work/projects/ml/Gene Selection Tireoide/data/CancerTireoide_ClassifBin.csv"
+
+
+def load_csv_features_target(path_to_csv: str, return_X_y: bool = False, return_df: bool = False) -> \
+        Union[Dict, Tuple[np.ndarray, np.ndarray], pd.DataFrame]:
+    """Load a basic csv dataset.
+
+    The first row of the dataset defines the name of each column. Each column must correspond to an attribute.
+    The last column is the target.
+
+    If return_X_y is false, then it returns a dictionary containing the fields data, target, feature_names and
+    target_name.
+    The names are inferred from the first row of the csv file.
+
+    :return: the dataset
+    """
+    df = pd.read_csv(path_to_csv, index_col=[0])
+    df = df.drop(columns=['geo_accession'])
+    df['DiagnosisDi'].loc[df['DiagnosisDi'] == 'Cancer'] = 1
+    df['DiagnosisDi'].loc[df['DiagnosisDi'] == 'Not Cancer'] = 0
+    df['DiagnosisDi'] = df['DiagnosisDi'].astype(np.uint8)
+
+    if return_df:
+        return df
+
+    data = df.iloc[:, :-1].to_numpy()
+    target = df.iloc[:, -1].to_numpy()
+    feature_names = df.columns[:-1]
+    target_name = df.columns[-1]
+
+    if return_X_y:
+        return data, target
+
+    return {
+        'data': data,
+        'target': target,
+        'feature_names': feature_names,
+        'target_name': target_name
+    }
+
+
+def main2():
+    from sklearn.feature_selection import VarianceThreshold
+
+    X = np.load('X.npy')
+    y = np.load('y.npy')
+
+    X_var = VarianceThreshold(2e-4).fit_transform(X)
+    print(X_var.shape)
+
+    print(X.shape)
+
+    fcbf = FastCorrelationBasedFilter(delta=0, n_features_to_select=10, n_bins=5)
+    fcbf.fit(X_var, y)
+    f_fcbf = fcbf.get_support(indices=True)
+
+    mi = MutualInformation(n_features_to_select=10)
+    mi.fit(X_var, y)
+    f_mi = mi.get_support(indices=True)
+
+    print(f_fcbf)
+    print(f_mi)
+
+
 if __name__ == '__main__':
-    main()
+    main2()

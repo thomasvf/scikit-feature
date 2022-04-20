@@ -6,6 +6,8 @@ __pycache__/
 # C extensions
 *.so
 example/cache
+skfeature/example/X.npy
+skfeature/example/y.npy
 
 # Distribution / packaging
 .Python
