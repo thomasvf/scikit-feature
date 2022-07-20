@@ -113,6 +113,12 @@ class FastCorrelationBasedFilter(SelectorMixin, MetaEstimatorMixin, BaseEstimato
             Fitted estimator.
         """
         n_features = X.shape[1]
+        
+        if isinstance(self.n_features_to_select, float):  # todo modify this to a check
+            n_features_to_select = round(self.n_features_to_select * n_features)
+        else:
+            n_features_to_select = self.n_features_to_select
+
         if self.n_bins is not None:
             if self.memory is not None:
                 discretize_ = self.memory.cache(discretize)
@@ -130,8 +136,8 @@ class FastCorrelationBasedFilter(SelectorMixin, MetaEstimatorMixin, BaseEstimato
         self.scores_ = np.zeros(n_features, dtype=float)
         self.scores_[indices] = su
 
-        if self.n_features_to_select is not None:
-            indices = indices[:self.n_features_to_select]
+        if n_features_to_select is not None:
+            indices = indices[:n_features_to_select]
 
         self.support_ = np.zeros(n_features, dtype=bool)
         self.support_[indices] = True

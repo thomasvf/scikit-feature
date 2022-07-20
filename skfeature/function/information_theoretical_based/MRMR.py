@@ -82,6 +82,11 @@ class MinimumRedundancyMaximumRelevance(SelectorMixin, MetaEstimatorMixin, BaseE
         """
         n_features = X.shape[1]
 
+        if isinstance(self.n_features_to_select, float):  # todo modify this to a check
+            n_features_to_select = round(self.n_features_to_select * n_features)
+        else:
+            n_features_to_select = self.n_features_to_select
+
         if self.n_bins is not None:
             if self.memory is not None:
                 discretize_ = self.memory.cache(discretize)
@@ -107,8 +112,8 @@ class MinimumRedundancyMaximumRelevance(SelectorMixin, MetaEstimatorMixin, BaseE
         self.mi_y_ = np.zeros(n_features, dtype=float)
         self.mi_y_[indices] = mi_y
 
-        if self.n_features_to_select:
-            indices = indices[:self.n_features_to_select]
+        if n_features_to_select:
+            indices = indices[:n_features_to_select]
 
         self.support_ = np.zeros(n_features, dtype=bool)
         self.support_[indices] = True
